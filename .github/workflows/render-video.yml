@@ -20,12 +20,20 @@ jobs:
         with:
           node-version: 18
 
-      - name: Install dependencies
+      - name: Install System Dependencies for Remotion
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg chromium-browser
+
+      - name: Install npm dependencies
         run: npm ci
 
-      - name: Render Video
+      - name: Create Props File and Render Video
         run: |
-          npx remotion render history-of-venus out/video.mp4 --props='{"title":"${{ github.event.inputs.title }}"}'
+          cat << 'EOF' > props.json
+          ${{ github.event.inputs.title }}
+          EOF
+          npx remotion render history-of-venus out/video.mp4 --props=props.json
 
       - name: Upload to Transfer.sh (Direct MP4 URL)
         run: |
@@ -33,19 +41,8 @@ jobs:
           echo "VIDEO_URL=$URL" >> $GITHUB_ENV
           echo "Direct Video URL: $URL"
 
-      - name: Trigger Make Webhook with Video URL
+      - name: Send URL to Make Webhook
         run: |
-          curl -X POST "SİZİN_MAKE_WEBHOOK_URL" \
+          curl -X POST "SİZİN_MAKE_WEBHOOK_URL_ADRESİNİZ" \
             -H "Content-Type: application/json" \
             -d "{\"video_url\": \"${{ env.VIDEO_URL }}\"}"
-
-            - name: Upload to Transfer.sh (Direct MP4 URL)
-            run: |
-              URL=$(curl --upload-file out/video.mp4 https://transfer.sh/video.mp4)
-              echo "VIDEO_URL=$URL" >> $GITHUB_ENV
-
-          - name: Send URL to Make Webhook
-            run: |
-              curl -X POST "SİZİN_MAKE_WEBHOOK_URL_ADRESİNİZ" \
-                -H "Content-Type: application/json" \
-                -d "{\"video_url\": \"${{ env.VIDEO_URL }}\"}"
