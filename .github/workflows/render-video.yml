@@ -27,8 +27,14 @@ jobs:
         run: |
           npx remotion render history-of-venus out/video.mp4 --props='{"title":"${{ github.event.inputs.title }}"}'
 
-      - name: Upload Video Artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: rendered-video
-          path: out/video.mp4
+      - name: Upload to Transfer.sh (Direct MP4 URL)
+        run: |
+          URL=$(curl --upload-file out/video.mp4 https://transfer.sh/video.mp4)
+          echo "VIDEO_URL=$URL" >> $GITHUB_ENV
+          echo "Direct Video URL: $URL"
+
+      - name: Trigger Make Webhook with Video URL
+        run: |
+          curl -X POST "SİZİN_MAKE_WEBHOOK_URL" \
+            -H "Content-Type: application/json" \
+            -d "{\"video_url\": \"${{ env.VIDEO_URL }}\"}"
