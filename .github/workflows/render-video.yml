@@ -30,9 +30,7 @@ jobs:
 
       - name: Create Props File and Render Video
         run: |
-          cat << 'EOF' > props.json
-          ${{ github.event.inputs.title }}
-          EOF
+          echo '${{ github.event.inputs.title }}' > props.json
           npx remotion render history-of-venus out/video.mp4 --props=props.json
 
       - name: Upload to Transfer.sh (Direct MP4 URL)
