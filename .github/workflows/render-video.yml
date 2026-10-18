@@ -42,8 +42,10 @@ jobs:
         run: |
           npx remotion render history-of-venus out/video.mp4 --props=props.json
 
-      - name: Upload to Transfer.sh (Direct MP4 URL)
+      - name: Upload Video to Catbox (Direct MP4 URL)
         run: |
-          URL=$(curl --upload-file out/video.mp4 https://transfer.sh/video.mp4)
+          URL=$(curl -F "reqtype=fileupload" -F "fileToUpload=@out/video.mp4" https://catbox.moe/user/api.php)
           echo "VIDEO_URL=$URL"
-          echo "Direct Video URL: $URL"
+          echo "-------------------------------------"
+          echo "DIRECT VIDEO URL: $URL"
+          echo "-------------------------------------"
