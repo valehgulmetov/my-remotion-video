@@ -28,9 +28,18 @@ jobs:
       - name: Install npm dependencies
         run: npm ci
 
-      - name: Create Props File and Render Video
+      - name: Create Safe Props File
         run: |
-          echo '${{ github.event.inputs.title }}' > props.json
+          node -e '
+            const fs = require("fs");
+            const input = process.env.INPUT_TITLE || "Default Title";
+            fs.writeFileSync("props.json", JSON.stringify({ title: input }));
+          '
+        env:
+          INPUT_TITLE: ${{ github.event.inputs.title }}
+
+      - name: Render Video
+        run: |
           npx remotion render history-of-venus out/video.mp4 --props=props.json
 
       - name: Upload to Transfer.sh (Direct MP4 URL)
