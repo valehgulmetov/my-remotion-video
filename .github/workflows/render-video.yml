@@ -38,11 +38,5 @@ jobs:
       - name: Upload to Transfer.sh (Direct MP4 URL)
         run: |
           URL=$(curl --upload-file out/video.mp4 https://transfer.sh/video.mp4)
-          echo "VIDEO_URL=$URL" >> $GITHUB_ENV
+          echo "VIDEO_URL=$URL"
           echo "Direct Video URL: $URL"
-
-      - name: Send URL to Make Webhook
-        run: |
-          curl -X POST "SİZİN_MAKE_WEBHOOK_URL_ADRESİNİZ" \
-            -H "Content-Type: application/json" \
-            -d "{\"video_url\": \"${{ env.VIDEO_URL }}\"}"
