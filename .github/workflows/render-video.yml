@@ -11,6 +11,9 @@ on:
 jobs:
   render:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -42,11 +45,18 @@ jobs:
         run: |
           npx remotion render history-of-venus out/video.mp4 --props=props.json
 
-      - name: Upload Video to File.io (Direct MP4 URL)
+      - name: Delete old Release (if exists)
         run: |
-          RESPONSE=$(curl -s -F "file=@out/video.mp4" https://file.io)
-          URL=$(echo $RESPONSE | node -e 'console.log(JSON.parse(require("fs").readFileSync(0, "utf-8")).link)')
-          echo "VIDEO_URL=$URL"
-          echo "-------------------------------------"
-          echo "DIRECT VIDEO URL: $URL"
-          echo "-------------------------------------"
+          gh release delete latest --yes || true
+          git push origin :refs/tags/latest || true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload to GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: latest
+          name: Latest Video
+          files: out/video.mp4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
