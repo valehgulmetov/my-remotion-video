@@ -35,7 +35,7 @@ jobs:
 
       - name: Generate Story + Audio + Images
         run: |
-          npx tsx cli/index.ts generate \
+          npx tsx cli.ts generate \
             --title "${{ github.event.inputs.title }}" \
             --topic "${{ github.event.inputs.topic }}"
         env:
