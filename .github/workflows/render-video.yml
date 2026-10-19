@@ -1,4 +1,4 @@
-name: Render Remotion Video
+name: Generate and Render Video
 
 on:
   workflow_dispatch:
@@ -6,16 +6,18 @@ on:
       title:
         description: 'Video Başlığı'
         required: true
-        default: 'Default Title'
+      topic:
+        description: 'Video Mövzusu'
+        required: true
 
 jobs:
-  render:
+  generate-and-render:
     runs-on: ubuntu-latest
     permissions:
       contents: write
 
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v3
 
       - name: Setup Node.js
@@ -23,32 +25,33 @@ jobs:
         with:
           node-version: 18
 
-      - name: Install System Dependencies for Remotion
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install system deps
         run: |
           sudo apt-get update
           sudo apt-get install -y ffmpeg chromium-browser
 
-      - name: Install npm dependencies
-        run: npm ci
-
-      - name: Create Safe Props File
+      - name: Generate Story + Audio + Images
         run: |
-          node -e '
-            const fs = require("fs");
-            const input = process.env.INPUT_TITLE || "Default Title";
-            fs.writeFileSync("props.json", JSON.stringify({ title: input }));
-          '
+          node cli/index.js generate \
+            --title "${{ github.event.inputs.title }}" \
+            --topic "${{ github.event.inputs.topic }}"
         env:
-          INPUT_TITLE: ${{ github.event.inputs.title }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
 
       - name: Render Video
         run: |
-          npx remotion render history-of-venus out/video.mp4 --props=props.json
+          SLUG=$(echo "${{ github.event.inputs.title }}" | \
+            tr '[:upper:]' '[:lower:]' | \
+            sed 's/[^a-z0-9]/-/g' | \
+            sed 's/^-\|-$//g')
+          npx remotion render $SLUG out/video.mp4
 
-      - name: Delete old Release (if exists)
-        run: |
-          gh release delete latest --yes || true
-          git push origin :refs/tags/latest || true
+      - name: Delete old Release
+        run: gh release delete latest --yes || true
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
